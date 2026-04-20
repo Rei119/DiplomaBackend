@@ -73,7 +73,9 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=schemas.Token)
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     user = crud.get_user_by_username(db, username=credentials.username)
-    if not user or not crud.verify_password(credentials.password, user.password):
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="not_registered")
+    if not crud.verify_password(credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer", "user": user}
@@ -101,7 +103,7 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 def get_google_redirect_uri(request: Request) -> str:
-    return f"{settings.BACKEND_URL}/api/auth/google/callback"
+    return f"{settings.BACKEND_URL.rstrip('/')}/api/auth/google/callback"
 
 @router.get("/google")
 async def google_login(request: Request, role: str = "student"):
