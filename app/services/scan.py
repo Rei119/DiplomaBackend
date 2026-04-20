@@ -165,7 +165,7 @@ async def scan_exam(
 
     for i, q in enumerate(questions):
         q["id"] = f"q{int(time.time())}_{i}"
-        q.setdefault("points", 10)
+        q["points"] = int(round(float(q.get("points", 10))))
         q.setdefault("type", "short_answer")
 
     return {"questions": questions, "page_count": len(b64_images)}
