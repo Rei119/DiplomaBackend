@@ -9,6 +9,11 @@ from .auth import get_current_user
 router = APIRouter(prefix="/exams", tags=["Exams"])
 
 
+def _strip_answers(exam: models.Exam) -> models.Exam:
+    exam.questions = [dict(q, correct_answer=None) for q in (exam.questions or [])]
+    return exam
+
+
 @router.get("/by-code/{code}", response_model=schemas.ExamResponse)
 def get_exam_by_code(
     code: str,
@@ -27,7 +32,7 @@ def get_exam_by_code(
             detail="Код олдсонгүй эсвэл шалгалт нийтлэгдээгүй байна"
         )
 
-    return exam
+    return _strip_answers(exam)
 
 
 @router.get("/", response_model=List[schemas.ExamResponse])
@@ -54,6 +59,8 @@ def get_exam(
     if current_user.role == "teacher" and exam.creator_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
+    if current_user.role == "student":
+        return _strip_answers(exam)
     return exam
 
 
