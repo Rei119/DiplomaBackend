@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -109,10 +109,17 @@ class SubmissionResponse(BaseModel):
     status: str
     total_score: Optional[float] = None
     ai_grading_results: Optional[Dict[str, Any]] = None
+    individual_scores: Optional[Dict[str, Any]] = None
     plagiarism_results: Optional[Dict[str, Any]] = None
     student_id_number: Optional[str] = None
     student_major: Optional[str] = None
     created_at: datetime
+
+    @model_validator(mode='after')
+    def populate_individual_scores(self):
+        if self.individual_scores is None and self.ai_grading_results is not None:
+            self.individual_scores = self.ai_grading_results
+        return self
 
     class Config:
         from_attributes = True
