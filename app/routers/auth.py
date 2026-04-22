@@ -148,7 +148,7 @@ async def google_callback(
             "grant_type": "authorization_code",
         })
         if token_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Google token exchange failed")
+            raise HTTPException(status_code=400, detail=f"Google token exchange failed: {token_response.text}")
         token_data = token_response.json()
 
         userinfo_response = await client.get(
