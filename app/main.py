@@ -24,7 +24,10 @@ def _migrate():
             except Exception:
                 conn.rollback()
 
-_migrate()
+try:
+    _migrate()
+except Exception:
+    pass
 
 app = FastAPI(
     title="Exam Platform API",
