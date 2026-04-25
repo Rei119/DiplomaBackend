@@ -89,6 +89,8 @@ class ExamResponse(ExamBase):
 class SubmissionCreate(BaseModel):
     answers: Dict[str, str]
     tab_switches: int = 0
+    copy_paste_count: int = 0
+    fullscreen_exit_count: int = 0
     behavior_score: int = 100
     start_time: int
     submit_time: int
@@ -105,6 +107,8 @@ class SubmissionResponse(BaseModel):
     exam_id: str
     answers: Dict[str, str]
     tab_switches: int
+    copy_paste_count: int = 0
+    fullscreen_exit_count: int = 0
     behavior_score: int
     status: str
     total_score: Optional[float] = None

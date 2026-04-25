@@ -161,6 +161,7 @@ async def google_callback(
 
     google_id = google_user.get("sub")
     email = google_user.get("email", "")
+    full_name = google_user.get("name", "")
 
     base_username = email.split("@")[0].replace(".", "_").replace("-", "_").lower()[:20]
 
@@ -174,13 +175,20 @@ async def google_callback(
             if crud.get_user_by_username(db, username=username):
                 suffix = ''.join(secrets.choice(string.digits) for _ in range(4))
                 username = f"{base_username}_{suffix}"
-            user = crud.create_google_user(db, username=username, email=email, role=role, google_id=google_id)
+            user = crud.create_google_user(db, username=username, email=email, role=role, google_id=google_id, full_name=full_name)
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
     one_time_code = _issue_oauth_code(access_token)
 
     frontend_url = settings.FRONTEND_URL
-    params = urlencode({"code": one_time_code, "username": user.username, "role": user.role, "id": user.id})
+    params = urlencode({
+        "code": one_time_code,
+        "username": user.username,
+        "role": user.role,
+        "id": user.id,
+        "email": user.email or "",
+        "full_name": user.full_name or "",
+    })
     return RedirectResponse(url=f"{frontend_url}/auth/callback?{params}")
 
 

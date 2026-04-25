@@ -62,6 +62,10 @@ class Submission(Base):
     answers = Column(JSON, nullable=False)
     tab_switches = Column(Integer, default=0)
 
+    # Anti-cheat behaviour tracking
+    copy_paste_count = Column(Integer, default=0)
+    fullscreen_exit_count = Column(Integer, default=0)
+
     # ── Camera / gaze tracking ─────────────────────────────────────────────
     # Only "looking down" is tracked now (head tilt + eye gaze combined).
     look_down_count = Column(Integer, default=0)
@@ -108,6 +112,8 @@ class ExamSession(Base):
     started_at = Column(BigInteger, nullable=False)       # epoch ms
     last_heartbeat = Column(BigInteger, nullable=False)   # epoch ms
     tab_switches = Column(Integer, default=0)
+    copy_paste_count = Column(Integer, default=0)
+    fullscreen_exit_count = Column(Integer, default=0)
 
     # 'active' → still taking | 'submitted' → done | 'abandoned' → no heartbeat
     status = Column(String, default="active", nullable=False)

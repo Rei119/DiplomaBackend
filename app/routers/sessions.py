@@ -83,6 +83,8 @@ def heartbeat(
 
     session.last_heartbeat = _now_ms()
     session.tab_switches = body.get("tab_switches", session.tab_switches)
+    session.copy_paste_count = body.get("copy_paste_count", getattr(session, "copy_paste_count", 0))
+    session.fullscreen_exit_count = body.get("fullscreen_exit_count", getattr(session, "fullscreen_exit_count", 0))
     db.commit()
     return {"ok": True}
 
@@ -167,6 +169,8 @@ def get_live_sessions(
             "last_heartbeat": s.last_heartbeat,
             "elapsed_ms": elapsed_ms,
             "tab_switches": s.tab_switches,
+            "copy_paste_count": getattr(s, "copy_paste_count", 0),
+            "fullscreen_exit_count": getattr(s, "fullscreen_exit_count", 0),
             "status": s.status,
             "score": score,
         })

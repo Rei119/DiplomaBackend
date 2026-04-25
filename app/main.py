@@ -1,11 +1,30 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from .database import engine, Base
 from .routers import auth, exams, submissions, ai_detect, users, camera_clips, sessions, monitor, question_images
 from .services import scan
 from .config import settings
 
 Base.metadata.create_all(bind=engine)
+
+def _migrate():
+    """Add new columns to existing tables without Alembic."""
+    migrations = [
+        "ALTER TABLE submissions ADD COLUMN copy_paste_count INTEGER DEFAULT 0",
+        "ALTER TABLE submissions ADD COLUMN fullscreen_exit_count INTEGER DEFAULT 0",
+        "ALTER TABLE exam_sessions ADD COLUMN copy_paste_count INTEGER DEFAULT 0",
+        "ALTER TABLE exam_sessions ADD COLUMN fullscreen_exit_count INTEGER DEFAULT 0",
+    ]
+    with engine.connect() as conn:
+        for stmt in migrations:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+
+_migrate()
 
 app = FastAPI(
     title="Exam Platform API",
