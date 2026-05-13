@@ -48,6 +48,7 @@ def instant_grade(exam: models.Exam, answers: dict) -> tuple:
                 "feedback": None,
                 "ai_detected": False,
                 "ai_confidence": None,
+                "correct_answer": question.get("correct_answer"),
             }
             scored_earned += score
             scored_possible += max_pts
