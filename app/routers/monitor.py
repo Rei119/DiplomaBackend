@@ -1,7 +1,7 @@
 """
-WebSocket signaling server for WebRTC-based live monitoring.
-Routes WebRTC offer/answer/ICE between students and the watching teacher,
-and forwards real-time flag events (tab-switch, look-down) to the teacher.
+WebSocket monitor server.
+Forwards JPEG snapshot frames from students to the teacher
+and forwards real-time flag events (tab-switch, look-down).
 """
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
@@ -116,37 +116,49 @@ async def monitor_ws(
                         # Ask student to start streaming now
                         await _send(websocket, {"type": "request_offer"})
 
-            # ── WebRTC: student → teacher ─────────────────────────────────────
+            # ── Camera frame: student → teacher ──────────────────────────────
+            elif mtype == "frame" and role == "student" and session_id:
+                if room.teacher:
+                    await _send(room.teacher, {
+                        "type": "frame",
+                        "session_id": session_id,
+                        "data": msg.get("data"),   # base64 JPEG
+                    })
+
+            # ── WebRTC signaling: student → teacher ───────────────────────────
             elif mtype == "offer" and role == "student" and session_id:
                 if room.teacher:
                     await _send(room.teacher, {
-                        "type": "offer",
+                        "type":       "offer",
                         "session_id": session_id,
-                        "sdp": msg.get("sdp"),
+                        "sdp":        msg.get("sdp"),
                     })
 
-            # ── WebRTC: teacher → student ─────────────────────────────────────
+            # ── WebRTC signaling: teacher → student ───────────────────────────
             elif mtype == "answer" and role == "teacher":
-                target = msg.get("session_id")
-                if target and target in room.students:
-                    await _send(room.students[target], {
+                target_id = msg.get("session_id")
+                sw = room.students.get(target_id)
+                if sw:
+                    await _send(sw, {
                         "type": "answer",
-                        "sdp": msg.get("sdp"),
+                        "sdp":  msg.get("sdp"),
                     })
 
-            # ── ICE candidates (bidirectional) ────────────────────────────────
+            # ── ICE candidates (both directions) ──────────────────────────────
             elif mtype == "ice":
-                if role == "student" and session_id and room.teacher:
-                    await _send(room.teacher, {
-                        "type": "ice",
-                        "session_id": session_id,
-                        "candidate": msg.get("candidate"),
-                    })
+                if role == "student" and session_id:
+                    if room.teacher:
+                        await _send(room.teacher, {
+                            "type":       "ice",
+                            "session_id": session_id,
+                            "candidate":  msg.get("candidate"),
+                        })
                 elif role == "teacher":
-                    target = msg.get("session_id")
-                    if target and target in room.students:
-                        await _send(room.students[target], {
-                            "type": "ice",
+                    target_id = msg.get("session_id")
+                    sw = room.students.get(target_id)
+                    if sw:
+                        await _send(sw, {
+                            "type":      "ice",
                             "candidate": msg.get("candidate"),
                         })
 

@@ -92,10 +92,10 @@ async def change_password(
             )
 
         # Validate new password length
-        if len(password_data.new_password) < 6:
+        if len(password_data.new_password) < 8:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="New password must be at least 6 characters long"
+                detail="New password must be at least 8 characters long"
             )
 
         # Hash and update password (using get_password_hash from crud)

@@ -155,6 +155,14 @@ def submit_exam(
     if exam.status != "published":
         raise HTTPException(status_code=400, detail="Exam not available")
 
+    # Prevent duplicate submission
+    existing_submission = db.query(models.Submission).filter(
+        models.Submission.exam_id == exam_id,
+        models.Submission.student_id == current_user.id,
+    ).first()
+    if existing_submission:
+        raise HTTPException(status_code=409, detail="Та энэ шалгалтыг аль хэдийн илгээсэн байна")
+
     # Determine pass/fail/cheat status
     status_val = "completed"
     if submission.tab_switches >= exam.max_tab_switches and exam.auto_fail_on_cheat:
